@@ -1,0 +1,69 @@
+import 'package:get/get.dart';
+import 'package:expressions/expressions.dart';
+
+class CalculatorController extends GetxController {
+  var expression = ''.obs; // Observable to store the current expression
+  var history = <String>[].obs; // Observable list for history
+
+  // Function to update the expression
+  void updateExpression(String value) {
+    expression.value = value;
+  }
+
+  // Function to clear the expression (all-clear)
+  void allClear() {
+    expression.value = '';
+  }
+
+  // Function to remove the last character
+  void clear() {
+    if (expression.value.isNotEmpty) {
+      expression.value = expression.value.substring(0, expression.value.length - 1);
+    }
+  }
+
+  // Function to calculate the result
+  void calculate() {
+    final exprString = expression.value.trim();
+
+    // If expression is empty, do nothing
+    if (exprString.isEmpty) return;
+
+    try {
+      // Parse and evaluate the expression
+      final expr = Expression.parse(exprString);
+      final evaluator = ExpressionEvaluator();
+      final result = evaluator.eval(expr, {});
+
+      // Format result with 2 decimal places if it's a double
+      final resultString = result is double
+          ? result.toStringAsFixed(2)
+          : result.toString();
+
+      // Update history (max 5 entries)
+      _updateHistory('$exprString = $resultString');
+
+      // Update the expression to the result
+      expression.value = resultString;
+    } catch (e) {
+      // Handle errors in expression parsing
+      expression.value = "Error";
+    }
+  }
+
+  // Function to handle history management (keep only the last 5 entries)
+  void _updateHistory(String newHistoryEntry) {
+    // Avoid duplicate entries in history
+    if (history.isEmpty || history.first != newHistoryEntry) {
+      history.insert(0, newHistoryEntry);
+      if (history.length > 5) {
+        history.removeLast(); // Keep only the last 5 results
+      }
+    }
+  }
+
+  // Function to delete the last character
+  void deleteLastCharacter() {
+    clear();  // You can use clear to reuse the logic
+  }
+}
